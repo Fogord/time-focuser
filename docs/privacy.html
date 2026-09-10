@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — TimeFocuser</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛡️</text></svg>">
+  <style>
+    :root {
+      --bg: #0b0f19;
+      --card-bg: #111827;
+      --border: #1f2937;
+      --text: #f3f4f6;
+      --text-muted: #9ca3af;
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.15);
+      --success: #10b981;
+    }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, "Open Sans", "Helvetica Neue", sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      line-height: 1.6;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    header {
+      margin-bottom: 40px;
+      text-align: center;
+    }
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 14px;
+      background: var(--accent-glow);
+      border: 1px solid var(--accent);
+      border-radius: 9999px;
+      color: #60a5fa;
+      font-size: 0.875rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+    }
+    h1 {
+      font-size: 2.25rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+      background: linear-gradient(135deg, #ffffff 0%, #cbd5e1 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .last-updated {
+      color: var(--text-muted);
+      font-size: 0.95rem;
+    }
+    .card {
+      background: var(--card-bg);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 32px;
+      margin-bottom: 24px;
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.3);
+    }
+    h2 {
+      font-size: 1.4rem;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    p {
+      color: #d1d5db;
+      margin-bottom: 14px;
+    }
+    p:last-child {
+      margin-bottom: 0;
+    }
+    ul {
+      list-style: none;
+      margin-bottom: 16px;
+    }
+    ul li {
+      position: relative;
+      padding-left: 24px;
+      margin-bottom: 10px;
+      color: #d1d5db;
+    }
+    ul li::before {
+      content: "✓";
+      position: absolute;
+      left: 0;
+      color: var(--success);
+      font-weight: bold;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 14px;
+      margin-bottom: 14px;
+    }
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+    th {
+      background-color: #1a2234;
+      color: #93c5fd;
+      font-weight: 600;
+    }
+    td {
+      color: #d1d5db;
+    }
+    code {
+      background: #1e293b;
+      color: #e2e8f0;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-size: 0.85em;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    }
+    .highlight-box {
+      background: rgba(16, 185, 129, 0.08);
+      border-left: 4px solid var(--success);
+      padding: 16px;
+      border-radius: 0 8px 8px 0;
+      margin: 16px 0;
+    }
+    footer {
+      text-align: center;
+      margin-top: 48px;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    footer a {
+      color: #60a5fa;
+      text-decoration: none;
+    }
+    footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="badge">🛡️ TimeFocuser Privacy Commitment</div>
+      <h1>Privacy Policy</h1>
+      <p class="last-updated">Last Updated: September 10, 2026</p>
+    </header>
+
+    <div class="card">
+      <h2>1. Overview & Core Philosophy</h2>
+      <p>
+        <strong>TimeFocuser</strong> ("we", "our", or "the extension") is a privacy-first, serverless browser extension designed to help users eliminate distractions and maintain deep focus by scheduling website blocking.
+      </p>
+      <div class="highlight-box">
+        <strong>Our Guarantee:</strong> TimeFocuser operates entirely locally on your device. We do not collect, transmit, store, or sell any personal data, browsing history, or analytics. There are no remote tracking servers, third-party analytics scripts, or external databases involved in its operation.
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>2. Data Collection & Storage</h2>
+      <p>
+        TimeFocuser does not operate any backend server. All information necessary for the extension to function remains strictly within your browser's local sandbox:
+      </p>
+      <ul>
+        <li><strong>Custom Blocking Rules:</strong> The domains, URLs, and wildcard patterns you designate to block.</li>
+        <li><strong>Schedules & Timers:</strong> The days, start/end hours, and timer durations configured for your focus periods.</li>
+        <li><strong>Focus Statistics:</strong> Local counters for focus sessions completed and blocks intercepted.</li>
+        <li><strong>Cryptographic Integrity Keys:</strong> Non-extractable encryption keys generated via the browser's Web Crypto API to ensure your rules cannot be manipulated while active.</li>
+      </ul>
+      <p>
+        All rule configurations are encrypted locally using AES-256-GCM and verified with HMAC-SHA256 signatures stored in browser <code>chrome.storage.local</code> and <code>IndexedDB</code>.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>3. Permissions Used & Why</h2>
+      <p>
+        TimeFocuser adheres to the principle of least privilege. It only requests permissions that are strictly necessary to deliver website blocking and tamper-prevention:
+      </p>
+      <table>
+        <thead>
+          <tr>
+            <th>Permission</th>
+            <th>Purpose</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td><code>storage</code></td>
+            <td>Persists your custom blocking rules, schedules, and cryptographic verification keys locally on your computer.</td>
+          </tr>
+          <tr>
+            <td><code>declarativeNetRequest</code></td>
+            <td>Enforces high-speed, network-level redirects to the local blocker landing page before blocked websites load.</td>
+          </tr>
+          <tr>
+            <td><code>webNavigation</code></td>
+            <td>Detects top-level navigation attempts to matching blocked websites and redirects to the calm blocked screen.</td>
+          </tr>
+          <tr>
+            <td><code>alarms</code></td>
+            <td>Runs periodic local background checks (every minute) to transition firewall states according to your focus schedule.</td>
+          </tr>
+          <tr>
+            <td><code>tabs</code></td>
+            <td>Identifies the active browser tab to redirect it to the local blocked page when a restricted website is navigated to.</td>
+          </tr>
+          <tr>
+            <td><code>&lt;all_urls&gt;</code> (Host Permission)</td>
+            <td>Required because users can designate any custom domain or URL on the internet to be blocked by the firewall.</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <div class="card">
+      <h2>4. Third-Party Sharing & Disclosure</h2>
+      <p>
+        We do not sell, rent, trade, or transfer any user information to third parties. Specifically:
+      </p>
+      <ul>
+        <li>No user data is ever sold to data brokers or advertisers.</li>
+        <li>No data is shared with third parties for analytics, marketing, or advertising.</li>
+        <li>No data is processed for creditworthiness or lending evaluations.</li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>5. Feedback & Optional Uninstall Survey</h2>
+      <p>
+        If you choose to submit feedback via our optional feedback form upon uninstalling or through the extension options, any text you voluntarily provide is submitted directly to an official Google Form for product improvement. No identifying computer data or personal identifiers are attached to such submissions.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>6. Changes to This Privacy Policy</h2>
+      <p>
+        We may update this Privacy Policy from time to time to reflect changes in legal requirements or extension updates. Any updates will be posted to this page with an updated revision date.
+      </p>
+    </div>
+
+    <div class="card">
+      <h2>7. Contact Us</h2>
+      <p>
+        If you have any questions, concerns, or requests regarding this Privacy Policy, you can reach out via:
+      </p>
+      <p>
+        Email: <a href="mailto:a.e.fogord@gmail.com" style="color: #60a5fa;">a.e.fogord@gmail.com</a><br />
+        GitHub Repository: <a href="https://github.com/Fogord/time-focuser" target="_blank" rel="noopener noreferrer" style="color: #60a5fa;">github.com/Fogord/time-focuser</a>
+      </p>
+    </div>
+
+    <footer>
+      <p>&copy; 2026 TimeFocuser. All rights reserved.</p>
+      <p style="margin-top: 8px;">
+        <a href="https://github.com/Fogord/time-focuser">GitHub</a> • 
+        <a href="https://github.com/Fogord/time-focuser/issues">Support & Issues</a>
+      </p>
+    </footer>
+  </div>
+</body>
+</html>
