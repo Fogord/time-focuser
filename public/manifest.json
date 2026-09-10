@@ -2,7 +2,7 @@
   "manifest_version": 3,
   "name": "TimeFocuser — In-Browser Site Firewall",
   "version": "1.0.0",
-  "description": "Firewall-grade website blocker with time-based schedules, tamper-resistant security, and locked settings during active focus periods.",
+  "description": "Firewall-grade website blocker with time-based schedules, tamper-resistant security, and locked settings during focus periods.",
   "permissions": [
     "storage",
     "declarativeNetRequest",

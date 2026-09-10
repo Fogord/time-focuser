@@ -78,7 +78,14 @@ for (const target of targetsToBuild) {
   }
   fs.copyFileSync(manifestSrc, path.join(targetDir, 'manifest.json'));
 
-  console.log(`✅ ${target.toUpperCase()} build complete! Ready in dist/${target}/`);
+  // Create zip file for webstore upload
+  const zipPath = path.resolve(`dist/${target}.zip`);
+  if (fs.existsSync(zipPath)) {
+    fs.rmSync(zipPath, { force: true });
+  }
+  execSync(`cd "${targetDir}" && zip -r "${zipPath}" . -x "*.DS_Store*"`, { stdio: 'ignore' });
+
+  console.log(`✅ ${target.toUpperCase()} build complete! Ready in dist/${target}/ (and dist/${target}.zip)`);
 }
 
 console.log('\n🎉 All requested targets built successfully!\n');
