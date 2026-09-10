@@ -20,8 +20,8 @@ export interface UseGoodbyeScreenResult {
   handleReinstall: () => void;
 }
 
-export { CONTACT_FORM_URL, MESSAGE_ENTRY } from '../constnats';
-import { CONTACT_FORM_URL, MESSAGE_ENTRY, DEFAULT_DEMO_STATS } from '../constnats';
+export { CONTACT_FORM_URL, MESSAGE_ENTRY } from '../constants';
+import { CONTACT_FORM_URL, MESSAGE_ENTRY, DEFAULT_DEMO_STATS } from '../constants';
 
 export const useGoodbyeScreen = (): UseGoodbyeScreenResult => {
   const [stats, setStats] = useState<FocusStats>(() => {

@@ -4,7 +4,7 @@ import { useGoodbyeScreen } from './useGoodbyeScreen';
 import { Clock, Shield, Award, Calendar, RefreshCw, CheckCircle2, Loader2, Send } from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
-import { FEEDBACK_OPTIONS as feedbackOptions } from '../constnats';
+import { FEEDBACK_OPTIONS as feedbackOptions } from '../constants';
 
 export const GoodbyeScreen: React.FC = () => {
   const {

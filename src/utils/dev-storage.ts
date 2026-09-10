@@ -1,5 +1,5 @@
 import { Rule } from '../types';
-import { DEV_DEFAULT_RULES, DEV_STORAGE_KEY as STORAGE_KEY } from '../constnats';
+import { DEV_DEFAULT_RULES, DEV_STORAGE_KEY as STORAGE_KEY } from '../constants';
 
 export { DEV_DEFAULT_RULES };
 

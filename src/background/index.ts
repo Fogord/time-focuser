@@ -9,7 +9,7 @@ import {
   DEFAULT_STATS,
   PROD_UNINSTALL_BASE_URL,
   LOCAL_UNINSTALL_BASE_URL,
-} from '../constnats';
+} from '../constants';
 
 const getUninstallBaseUrl = (): string => {
   if (typeof chrome !== 'undefined' && chrome.runtime?.getManifest) {

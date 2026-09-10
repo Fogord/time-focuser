@@ -5,7 +5,7 @@ import {
   SECURITY_AES_KEY_ID as AES_KEY_ID,
   SECURITY_HMAC_KEY_ID as HMAC_KEY_ID,
   SECURITY_VERSION as CURRENT_VERSION,
-} from '../constnats';
+} from '../constants';
 
 // Open IndexedDB to store non-extractable CryptoKeys
 const openKeyDB = (): Promise<IDBDatabase> => {

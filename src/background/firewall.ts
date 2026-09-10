@@ -1,5 +1,5 @@
 import { Rule } from '../types';
-import { BLOCKED_PAGE_PATH } from '../constnats';
+import { BLOCKED_PAGE_PATH } from '../constants';
 
 /**
  * Escapes regex special characters except '*' for wildcard conversion

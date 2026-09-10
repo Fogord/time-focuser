@@ -9,7 +9,7 @@ import {
   DEFAULT_RULE_START_TIME,
   DEFAULT_RULE_END_TIME,
   DEFAULT_TIMER_DURATION_MINUTES,
-} from '../constnats';
+} from '../constants';
 
 interface AddRuleModalProps {
   isOpen: boolean;

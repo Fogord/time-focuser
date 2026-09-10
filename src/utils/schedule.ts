@@ -1,6 +1,6 @@
 import { Rule } from '../types';
 
-import { DAYS_SHORT, WEEK_DAYS_CONFIG } from '../constnats';
+import { DAYS_SHORT, WEEK_DAYS_CONFIG } from '../constants';
 
 export { DAYS_SHORT, WEEK_DAYS_CONFIG };
 
