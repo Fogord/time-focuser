@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="100%" height="100%">
+  <defs>
+    <!-- Dial Background Gradient -->
+    <radialGradient id="dialGradient" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#111827" />
+      <stop offset="85%" stop-color="#0b0f17" />
+      <stop offset="100%" stop-color="#030712" />
+    </radialGradient>
+
+    <!-- Outer Ring Gradient -->
+    <linearGradient id="ringGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#475569" />
+      <stop offset="50%" stop-color="#334155" />
+      <stop offset="100%" stop-color="#1e293b" />
+    </linearGradient>
+
+    <!-- Vibrant Red Gradient for '!' -->
+    <linearGradient id="exclamationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stop-color="#ff5757" />
+      <stop offset="100%" stop-color="#dc2626" />
+    </linearGradient>
+
+    <!-- Red Glow Filter for Center '!' -->
+    <filter id="redGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feDropShadow dx="0" dy="2" stdDeviation="8" flood-color="#ef4444" flood-opacity="0.8" />
+      <feDropShadow dx="0" dy="1" stdDeviation="2" flood-color="#000000" flood-opacity="0.6" />
+    </filter>
+  </defs>
+
+  <!-- Clean Circular Dial Base (No Watch Frame/Lugs/Crown) -->
+  <circle cx="256" cy="256" r="236" fill="url(#ringGradient)" stroke="#475569" stroke-width="4" />
+  <circle cx="256" cy="256" r="222" fill="url(#dialGradient)" stroke="#1e293b" stroke-width="3" />
+
+  <!-- 9:00 to 18:00 (6:00 PM) Sector Highlight with Red Opacity 0.5 -->
+  <path d="M 256 256 L 56 256 A 200 200 0 1 1 256 456 Z" fill="#ef4444" fill-opacity="0.5" />
+
+  <!-- 9:00 and 18:00 Sector Boundary Marker Lines -->
+<!--  <line x1="256" y1="256" x2="56" y2="256" stroke="#f87171" stroke-width="3.5" stroke-linecap="round" stroke-opacity="0.9" />-->
+<!--  <line x1="256" y1="256" x2="256" y2="456" stroke="#f87171" stroke-width="3.5" stroke-linecap="round" stroke-opacity="0.9" />-->
+
+  <!-- Minimalist Ticks at 9:00, 12:00, 15:00 (3:00), and 18:00 (6:00) - No Numbers -->
+  <line x1="256" y1="58" x2="256" y2="80" stroke="#fca5a5" stroke-width="5" stroke-linecap="round" />
+  <line x1="454" y1="256" x2="432" y2="256" stroke="#fca5a5" stroke-width="5" stroke-linecap="round" />
+  <line x1="256" y1="454" x2="256" y2="432" stroke="#fca5a5" stroke-width="5" stroke-linecap="round" />
+  <line x1="58" y1="256" x2="80" y2="256" stroke="#fca5a5" stroke-width="5" stroke-linecap="round" />
+
+  <!-- Subtle Minute Track Guide -->
+  <circle cx="256" cy="256" r="200" fill="none" stroke="#334155" stroke-dasharray="3 17" stroke-width="2" opacity="0.5" />
+
+  <!-- Central '!' Exclamation Mark (Clean, Bold, Red - No Clock Arrows) -->
+  <g filter="url(#redGlow)">
+    <path d="M 238 130 C 238 118, 274 118, 274 130 L 268 268 C 268 276, 244 276, 244 268 Z"
+          fill="url(#exclamationGradient)" stroke="#fff1f2" stroke-width="2" stroke-linejoin="round" />
+
+    <circle cx="256" cy="336" r="18" fill="url(#exclamationGradient)" stroke="#fff1f2" stroke-width="2" />
+  </g>
+</svg>

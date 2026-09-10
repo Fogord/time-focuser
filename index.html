@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TimeFocuser — Local Dev Center</title>
+    <link rel="stylesheet" href="/src/index.css" />
+  </head>
+  <body class="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-6">
+    <div class="max-w-xl w-full space-y-8 text-center">
+      <!-- Header with Watch Icon -->
+      <div class="flex flex-col items-center space-y-3">
+        <img src="/icons/watch-icon.svg" class="w-20 h-20 animate-pulse" alt="TimeFocuser" />
+        <h1 class="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-slate-100 via-slate-200 to-red-400 bg-clip-text text-transparent">
+          TimeFocuser Dev Center
+        </h1>
+        <p class="text-xs text-slate-400 max-w-md">
+          Fast local development environment with Hot Module Replacement (HMR). Select a page to preview and develop:
+        </p>
+      </div>
+
+      <!-- Page Links Grid -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 text-left">
+        <!-- Dashboard / Options Page -->
+        <a
+          href="/src/options/index.html"
+          class="p-5 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-500/50 rounded-2xl transition-all shadow-lg group hover:-translate-y-0.5"
+        >
+          <div class="text-xs font-semibold text-red-400 uppercase tracking-wider mb-1">Full View</div>
+          <div class="text-base font-bold text-slate-100 group-hover:text-red-300 transition-colors">
+            Options Dashboard
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+            Manage firewall rules, time schedules, and test URL matching.
+          </p>
+        </a>
+
+        <!-- Popup Preview -->
+        <a
+          href="/src/popup/index.html"
+          class="p-5 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-500/50 rounded-2xl transition-all shadow-lg group hover:-translate-y-0.5"
+        >
+          <div class="text-xs font-semibold text-amber-400 uppercase tracking-wider mb-1">Widget View</div>
+          <div class="text-base font-bold text-slate-100 group-hover:text-amber-300 transition-colors">
+            Extension Popup
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+            Compact toolbar popup with live timer and quick Pomodoro starters.
+          </p>
+        </a>
+
+        <!-- Blocked Screen Preview -->
+        <a
+          href="/src/blocked/index.html?url=https%3A%2F%2Finstagram.com&rule=Social+Media+Focus"
+          class="p-5 bg-slate-900/80 hover:bg-slate-900 border border-slate-800 hover:border-red-500/50 rounded-2xl transition-all shadow-lg group hover:-translate-y-0.5"
+        >
+          <div class="text-xs font-semibold text-rose-400 uppercase tracking-wider mb-1">Interception</div>
+          <div class="text-base font-bold text-slate-100 group-hover:text-rose-300 transition-colors">
+            Blocked Screen
+          </div>
+          <p class="text-[11px] text-slate-400 mt-1.5 leading-relaxed">
+            Full-screen landing page shown when accessing restricted sites.
+          </p>
+        </a>
+      </div>
+
+      <!-- Dev Tips Footer -->
+      <div class="p-4 bg-slate-900/40 border border-slate-800/80 rounded-xl text-left text-xs text-slate-400 space-y-2">
+        <div class="font-semibold text-slate-300 flex items-center gap-1.5">
+          <span>💡 Development Modes</span>
+        </div>
+        <ul class="list-disc list-inside space-y-1 text-[11px] text-slate-500">
+          <li><strong>UI Dev (HMR):</strong> Runs locally in browser with instant hot reload and localStorage state fallback.</li>
+          <li><strong>Extension Watch:</strong> Run <code class="text-slate-300 bg-slate-800 px-1 py-0.5 rounded">npm run dev:watch</code> to auto-rebuild into <code class="text-slate-300">dist/chrome/</code> on every file edit.</li>
+        </ul>
+      </div>
+    </div>
+  </body>
+</html>
