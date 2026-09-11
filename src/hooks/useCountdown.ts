@@ -48,4 +48,4 @@ export const useCountdown = (expiresAt: number | null | undefined): CountdownSta
   }, [expiresAt]);
 
   return state;
-}
+};

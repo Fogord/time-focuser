@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Plus, Shield } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { Pencil, Shield } from 'lucide-react';
 import { MatchType, Rule, ScheduleType } from '../types';
 import { Modal } from './ui/Modal';
 import { Button } from './ui/Button';
@@ -11,20 +11,21 @@ import {
   DEFAULT_TIMER_DURATION_MINUTES,
 } from '../constants';
 
-interface AddRuleModalProps {
+interface EditRuleModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (rule: Omit<Rule, 'id' | 'createdAt' | 'updatedAt'>) => void;
+  rule: Rule | null;
+  onSave: (updatedRule: Rule) => void;
 }
 
-export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onAdd }) => {
+export const EditRuleModal: React.FC<EditRuleModalProps> = ({ isOpen, onClose, rule, onSave }) => {
   const [name, setName] = useState('');
   const [urlPattern, setUrlPattern] = useState('');
   const [matchType, setMatchType] = useState<MatchType>('domain');
   const [scheduleType, setScheduleType] = useState<ScheduleType>('weekly');
 
   // Weekly config
-  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]); // Mon-Fri
+  const [selectedDays, setSelectedDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [startTime, setStartTime] = useState(DEFAULT_RULE_START_TIME);
   const [endTime, setEndTime] = useState(DEFAULT_RULE_END_TIME);
 
@@ -32,6 +33,33 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
   const [timerDuration, setTimerDuration] = useState<number>(DEFAULT_TIMER_DURATION_MINUTES);
 
   const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (rule) {
+      setName(rule.name);
+      setUrlPattern(rule.urlPattern);
+      setMatchType(rule.matchType);
+      setScheduleType(rule.scheduleType);
+
+      if (rule.weeklySchedule) {
+        setSelectedDays(rule.weeklySchedule.days);
+        setStartTime(rule.weeklySchedule.startTime);
+        setEndTime(rule.weeklySchedule.endTime);
+      } else {
+        setSelectedDays([1, 2, 3, 4, 5]);
+        setStartTime(DEFAULT_RULE_START_TIME);
+        setEndTime(DEFAULT_RULE_END_TIME);
+      }
+
+      if (rule.timerSchedule) {
+        setTimerDuration(rule.timerSchedule.durationMinutes);
+      } else {
+        setTimerDuration(DEFAULT_TIMER_DURATION_MINUTES);
+      }
+
+      setError(null);
+    }
+  }, [rule, isOpen]);
 
   const toggleDay = (day: number) => {
     if (selectedDays.includes(day)) {
@@ -44,6 +72,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!rule) return;
     setError(null);
 
     const cleanName = name.trim();
@@ -68,37 +97,45 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
       }
     }
 
-    const newRule: Omit<Rule, 'id' | 'createdAt' | 'updatedAt'> = {
+    const updated: Rule = {
+      ...rule,
       name: cleanName,
       urlPattern: cleanPattern,
       matchType,
       scheduleType,
-      enabled: true,
+      updatedAt: Date.now(),
     };
 
     if (scheduleType === 'weekly') {
-      newRule.weeklySchedule = {
+      updated.weeklySchedule = {
         days: selectedDays,
         startTime,
         endTime,
       };
+      delete updated.timerSchedule;
     } else if (scheduleType === 'timer') {
-      newRule.timerSchedule = {
+      updated.timerSchedule = {
         durationMinutes: timerDuration,
         expiresAt: Date.now() + timerDuration * 60 * 1000,
       };
+      delete updated.weeklySchedule;
+    } else {
+      delete updated.weeklySchedule;
+      delete updated.timerSchedule;
     }
 
-    onAdd(newRule);
+    onSave(updated);
     onClose();
   };
+
+  if (!rule) return null;
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Add New Firewall Rule"
-      icon={<Shield className="w-5 h-5 text-red-500" />}
+      title={`Edit Rule: ${rule.name}`}
+      icon={<Pencil className="w-5 h-5 text-indigo-400" />}
       maxWidth="md"
     >
       <form onSubmit={handleSubmit} className="p-6 space-y-4">
@@ -164,7 +201,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
                 onClick={() => setScheduleType(type)}
                 className={`py-2 px-3 rounded-xl border text-xs font-medium capitalize transition-all ${
                   scheduleType === type
-                    ? 'bg-red-500/15 border-red-500/50 text-red-300 shadow-sm'
+                    ? 'bg-indigo-500/20 border-indigo-500/60 text-indigo-300 shadow-sm'
                     : 'bg-slate-950 border-slate-800 text-slate-400 hover:bg-slate-800/50'
                 }`}
               >
@@ -192,7 +229,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
                       title={d.title}
                       className={`w-8 h-8 rounded-lg text-xs font-semibold transition-colors ${
                         isSelected
-                          ? 'bg-red-500/30 text-red-300 border border-red-500/60'
+                          ? 'bg-indigo-500/30 text-indigo-300 border border-indigo-500/60'
                           : 'bg-slate-900 text-slate-500 border border-slate-800 hover:bg-slate-800'
                       }`}
                     >
@@ -210,7 +247,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
                   type="time"
                   value={startTime}
                   onChange={(e) => setStartTime(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
               </div>
               <div>
@@ -219,7 +256,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
                   type="time"
                   value={endTime}
                   onChange={(e) => setEndTime(e.target.value)}
-                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-red-500"
+                  className="w-full bg-slate-900 border border-slate-800 rounded-lg px-2.5 py-1.5 text-xs text-slate-200 focus:outline-none focus:border-indigo-500"
                 />
               </div>
             </div>
@@ -238,7 +275,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
                   onClick={() => setTimerDuration(m)}
                   className={`flex-1 py-1.5 rounded-lg text-xs font-semibold transition-all border ${
                     timerDuration === m
-                      ? 'bg-red-500/30 border-red-500/60 text-red-200'
+                      ? 'bg-indigo-500/30 border-indigo-500/60 text-indigo-200'
                       : 'bg-slate-900 border-slate-800 text-slate-400 hover:bg-slate-800'
                   }`}
                 >
@@ -247,7 +284,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
               ))}
             </div>
             <p className="text-[11px] text-slate-500 pt-1">
-              Saving will start a {timerDuration}-minute focus block, immediately locking settings.
+              Saving will activate a {timerDuration}-minute focus block for this rule.
             </p>
           </div>
         )}
@@ -255,7 +292,7 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
         {/* Always explanation */}
         {scheduleType === 'always' && (
           <div className="p-3.5 bg-slate-950/60 border border-slate-800 rounded-xl text-xs text-slate-400">
-            This rule will block the site 24/7 continuously until manually disabled during an
+            This rule will block the site 24/7 continuously until manually modified during an
             unlocked period.
           </div>
         )}
@@ -265,8 +302,8 @@ export const AddRuleModal: React.FC<AddRuleModalProps> = ({ isOpen, onClose, onA
           <Button type="button" variant="ghost" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" variant="primary" icon={<Plus className="w-4 h-4" />}>
-            Create Rule
+          <Button type="submit" variant="primary" icon={<Shield className="w-4 h-4" />}>
+            Save Changes
           </Button>
         </div>
       </form>

@@ -2,13 +2,7 @@ import React from 'react';
 import { MatchType } from '../../types';
 
 export type BadgeVariant =
-  | MatchType
-  | 'active'
-  | 'scheduled'
-  | 'disabled'
-  | 'success'
-  | 'danger'
-  | 'neutral';
+  MatchType | 'active' | 'scheduled' | 'disabled' | 'success' | 'danger' | 'neutral';
 
 export interface BadgeProps {
   variant?: BadgeVariant;

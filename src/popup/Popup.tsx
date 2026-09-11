@@ -1,17 +1,29 @@
 import React from 'react';
-import { ExternalLink, Lock, AlertTriangle, ShieldCheck, Flame } from 'lucide-react';
+import {
+  ExternalLink,
+  Lock,
+  AlertTriangle,
+  ShieldCheck,
+  Zap,
+  SlidersHorizontal,
+} from 'lucide-react';
 import { usePopup } from './usePopup';
 import { WatchIcon } from '../components/WatchIcon';
 import { Button } from '../components/ui/Button';
+import { QuickActionModal } from '../components/QuickActionModal';
 
 export const Popup: React.FC = () => {
   const {
     rules,
     lockState,
     countdown,
-    startQuickTimer,
+    isQuickModalOpen,
+    setIsQuickModalOpen,
+    startQuickFocusSession,
     openDashboard,
   } = usePopup();
+
+  const isQuickFocusActive = Boolean(lockState.quickFocusSession);
 
   return (
     <div className="w-[360px] bg-slate-950 text-slate-100 p-4 select-none">
@@ -56,14 +68,16 @@ export const Popup: React.FC = () => {
                   <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500"></span>
                 </span>
                 <span className="text-xs font-bold text-red-300 tracking-wide uppercase">
-                  Firewall Active
+                  {isQuickFocusActive ? 'Quick Focus Active' : 'Firewall Active'}
                 </span>
               </div>
               <Lock className="w-4 h-4 text-red-400" />
             </div>
 
             <div className="mt-2.5 flex items-baseline justify-between">
-              <span className="text-xs text-slate-400">Active Rules Locked</span>
+              <span className="text-xs text-slate-400">
+                {isQuickFocusActive ? '1-Hour Session' : 'Active Rules Locked'}
+              </span>
               {countdown ? (
                 <span className="font-mono text-sm font-semibold text-red-200 bg-red-950/80 px-2 py-0.5 rounded border border-red-500/30">
                   {countdown}
@@ -76,7 +90,8 @@ export const Popup: React.FC = () => {
             <div className="mt-2 pt-2 border-t border-slate-800/80 flex justify-between text-[11px] text-slate-400">
               <span>Blocking:</span>
               <span className="text-slate-200 font-medium">
-                {lockState.activeRuleIds.length} active {lockState.activeRuleIds.length === 1 ? 'rule' : 'rules'}
+                {lockState.activeRuleIds.length} active{' '}
+                {lockState.activeRuleIds.length === 1 ? 'rule' : 'rules'}
               </span>
             </div>
           </div>
@@ -98,29 +113,31 @@ export const Popup: React.FC = () => {
         )}
       </div>
 
-      {/* Quick Actions */}
+      {/* Quick Actions (1-Hour Focus Session) */}
       {!lockState.isLocked && !lockState.tamperDetected && rules.length > 0 && (
         <div className="space-y-2 mb-4">
           <div className="text-[11px] font-medium text-slate-400 flex items-center gap-1">
-            <Flame className="w-3 h-3 text-orange-400" />
-            <span>Quick Focus Session (Locks Settings):</span>
+            <Zap className="w-3 h-3 text-amber-400" />
+            <span>Quick Focus Session (1 Hour):</span>
           </div>
           <div className="grid grid-cols-2 gap-2">
             <Button
               size="xs"
               variant="secondary"
-              onClick={() => startQuickTimer(25)}
-              className="py-1.5 hover:border-red-500/50"
+              onClick={() => startQuickFocusSession(['*'], 60)}
+              className="py-2 hover:border-amber-500/50 text-amber-200 justify-center"
+              icon={<Zap className="w-3 h-3 text-amber-400" />}
             >
-              25m Pomodoro
+              All for 1H
             </Button>
             <Button
               size="xs"
               variant="secondary"
-              onClick={() => startQuickTimer(60)}
-              className="py-1.5 hover:border-red-500/50"
+              onClick={() => setIsQuickModalOpen(true)}
+              className="py-2 hover:border-amber-500/50 text-slate-200 justify-center"
+              icon={<SlidersHorizontal className="w-3 h-3 text-slate-400" />}
             >
-              60m Deep Work
+              Some for 1H...
             </Button>
           </div>
         </div>
@@ -136,6 +153,14 @@ export const Popup: React.FC = () => {
       >
         Open Rules Dashboard
       </Button>
+
+      {/* Quick Action Selection Modal */}
+      <QuickActionModal
+        isOpen={isQuickModalOpen}
+        onClose={() => setIsQuickModalOpen(false)}
+        rules={rules}
+        onStart={startQuickFocusSession}
+      />
     </div>
   );
 };

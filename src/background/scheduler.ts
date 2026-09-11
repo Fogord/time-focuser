@@ -1,4 +1,4 @@
-import { Rule, LockState } from '../types';
+import { Rule, LockState, QuickFocusSession } from '../types';
 
 /**
  * Parses "HH:MM" string to minutes from midnight
@@ -9,9 +9,31 @@ export const timeStringToMinutes = (timeStr: string): number => {
 };
 
 /**
- * Checks if a rule is currently active at the given date/time
+ * Checks if a rule is currently active via a temporary Quick Focus session
  */
-export const isRuleActive = (rule: Rule, date: Date = new Date()): boolean => {
+export const isRuleQuickFocused = (
+  ruleId: string,
+  session?: QuickFocusSession | null,
+  date: Date = new Date()
+): boolean => {
+  if (!session || !session.expiresAt) return false;
+  if (date.getTime() >= session.expiresAt) return false;
+  return session.ruleIds.includes('*') || session.ruleIds.includes(ruleId);
+};
+
+/**
+ * Checks if a rule is currently active at the given date/time, taking into account
+ * any active quick focus session without altering the rule's manual settings.
+ */
+export const isRuleActive = (
+  rule: Rule,
+  date: Date = new Date(),
+  quickSession?: QuickFocusSession | null
+): boolean => {
+  if (isRuleQuickFocused(rule.id, quickSession, date)) {
+    return true;
+  }
+
   if (!rule.enabled) return false;
 
   if (rule.scheduleType === 'always') {
@@ -49,43 +71,65 @@ export const isRuleActive = (rule: Rule, date: Date = new Date()): boolean => {
 /**
  * Computes when a specific active rule's current block period will finish
  */
-export const getRuleExpiration = (rule: Rule, date: Date = new Date()): number | null => {
-  if (!isRuleActive(rule, date)) return null;
+export const getRuleExpiration = (
+  rule: Rule,
+  date: Date = new Date(),
+  quickSession?: QuickFocusSession | null
+): number | null => {
+  if (!isRuleActive(rule, date, quickSession)) return null;
 
-  if (rule.scheduleType === 'always') {
-    return null; // never expires
-  }
+  const quickExp = isRuleQuickFocused(rule.id, quickSession, date)
+    ? (quickSession?.expiresAt ?? null)
+    : null;
 
-  if (rule.scheduleType === 'timer') {
-    return rule.timerSchedule?.expiresAt || null;
-  }
+  let scheduledExp: number | null = null;
 
-  if (rule.scheduleType === 'weekly' && rule.weeklySchedule) {
-    const startMinutes = timeStringToMinutes(rule.weeklySchedule.startTime);
-    const endMinutes = timeStringToMinutes(rule.weeklySchedule.endTime);
-    const currentMinutes = date.getHours() * 60 + date.getMinutes();
+  if (rule.enabled) {
+    if (rule.scheduleType === 'always') {
+      return null; // perpetual
+    }
 
-    const targetDate = new Date(date);
-    targetDate.setSeconds(0, 0);
+    if (rule.scheduleType === 'timer') {
+      scheduledExp = rule.timerSchedule?.expiresAt || null;
+    } else if (rule.scheduleType === 'weekly' && rule.weeklySchedule) {
+      const currentDay = date.getDay();
+      if (rule.weeklySchedule.days.includes(currentDay)) {
+        const startMinutes = timeStringToMinutes(rule.weeklySchedule.startTime);
+        const endMinutes = timeStringToMinutes(rule.weeklySchedule.endTime);
+        const currentMinutes = date.getHours() * 60 + date.getMinutes();
 
-    const endH = Math.floor(endMinutes / 60);
-    const endM = endMinutes % 60;
+        const isWithin =
+          startMinutes <= endMinutes
+            ? currentMinutes >= startMinutes && currentMinutes < endMinutes
+            : currentMinutes >= startMinutes || currentMinutes < endMinutes;
 
-    if (startMinutes <= endMinutes) {
-      targetDate.setHours(endH, endM, 0, 0);
-      return targetDate.getTime();
-    } else {
-      // Overnight
-      if (currentMinutes >= startMinutes) {
-        // Ends tomorrow morning
-        targetDate.setDate(targetDate.getDate() + 1);
+        if (isWithin) {
+          const targetDate = new Date(date);
+          targetDate.setSeconds(0, 0);
+
+          const endH = Math.floor(endMinutes / 60);
+          const endM = endMinutes % 60;
+
+          if (startMinutes <= endMinutes) {
+            targetDate.setHours(endH, endM, 0, 0);
+            scheduledExp = targetDate.getTime();
+          } else {
+            // Overnight
+            if (currentMinutes >= startMinutes) {
+              targetDate.setDate(targetDate.getDate() + 1);
+            }
+            targetDate.setHours(endH, endM, 0, 0);
+            scheduledExp = targetDate.getTime();
+          }
+        }
       }
-      targetDate.setHours(endH, endM, 0, 0);
-      return targetDate.getTime();
     }
   }
 
-  return null;
+  if (scheduledExp && quickExp) {
+    return Math.max(scheduledExp, quickExp);
+  }
+  return quickExp || scheduledExp;
 };
 
 /**
@@ -94,8 +138,12 @@ export const getRuleExpiration = (rule: Rule, date: Date = new Date()): number |
 export const computeLockState = (
   rules: Rule[],
   tamperDetected: boolean = false,
-  date: Date = new Date()
+  date: Date = new Date(),
+  quickSession?: QuickFocusSession | null
 ): LockState => {
+  const validQuickSession =
+    quickSession && quickSession.expiresAt > date.getTime() ? quickSession : null;
+
   if (tamperDetected) {
     return {
       isLocked: true,
@@ -103,10 +151,11 @@ export const computeLockState = (
       lockExpiresAt: null,
       tamperDetected: true,
       lastChecked: date.getTime(),
+      quickFocusSession: validQuickSession,
     };
   }
 
-  const activeRules = rules.filter((r) => isRuleActive(r, date));
+  const activeRules = rules.filter((r) => isRuleActive(r, date, validQuickSession));
   const isLocked = activeRules.length > 0;
 
   if (!isLocked) {
@@ -116,6 +165,7 @@ export const computeLockState = (
       lockExpiresAt: null,
       tamperDetected: false,
       lastChecked: date.getTime(),
+      quickFocusSession: validQuickSession,
     };
   }
 
@@ -124,7 +174,7 @@ export const computeLockState = (
   let hasAlways = false;
 
   for (const rule of activeRules) {
-    const exp = getRuleExpiration(rule, date);
+    const exp = getRuleExpiration(rule, date, validQuickSession);
     if (exp === null) {
       hasAlways = true;
       break;
@@ -141,5 +191,6 @@ export const computeLockState = (
     lockExpiresAt: hasAlways ? null : lockExpiresAt,
     tamperDetected: false,
     lastChecked: date.getTime(),
+    quickFocusSession: validQuickSession,
   };
 };

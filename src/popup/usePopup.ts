@@ -1,13 +1,18 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Rule, LockState } from '../types';
+import { Rule, LockState, QuickFocusSession } from '../types';
 import { computeLockState } from '../background/scheduler';
 import { isExtensionEnvironment, sendExtensionMessage, openOptionsPage } from '../utils/extension';
-import { getDevRules, saveDevRules } from '../utils/dev-storage';
+import {
+  getDevRules,
+  getDevQuickFocusSession,
+  saveDevQuickFocusSession,
+} from '../utils/dev-storage';
 import { useCountdown } from '../hooks/useCountdown';
 
 export const usePopup = () => {
   const isExtensionEnv = isExtensionEnvironment();
   const [rules, setRules] = useState<Rule[]>([]);
+  const [isQuickModalOpen, setIsQuickModalOpen] = useState(false);
   const [lockState, setLockState] = useState<LockState>({
     isLocked: false,
     activeRuleIds: [],
@@ -20,7 +25,11 @@ export const usePopup = () => {
 
   const fetchState = useCallback(async () => {
     if (isExtensionEnv) {
-      const response = await sendExtensionMessage<{ rules: Rule[]; lockState: LockState }>({
+      const response = await sendExtensionMessage<{
+        rules: Rule[];
+        lockState: LockState;
+        quickFocusSession?: QuickFocusSession | null;
+      }>({
         type: 'GET_STATE',
       });
       if (response && response.success && response.data) {
@@ -29,8 +38,9 @@ export const usePopup = () => {
       }
     } else {
       const devRules = getDevRules();
+      const devSession = getDevQuickFocusSession();
       setRules(devRules);
-      setLockState(computeLockState(devRules, false, new Date()));
+      setLockState(computeLockState(devRules, false, new Date(), devSession));
     }
   }, [isExtensionEnv]);
 
@@ -40,37 +50,27 @@ export const usePopup = () => {
     return () => clearInterval(interval);
   }, [fetchState]);
 
-  const startQuickTimer = async (durationMinutes: number) => {
+  const startQuickFocusSession = async (ruleIds: string[], durationMinutes: number = 60) => {
     if (rules.length === 0) {
       openOptionsPage();
       return;
     }
 
-    const targetRule = rules[0];
     if (isExtensionEnv) {
       await sendExtensionMessage({
-        type: 'START_TIMER',
-        payload: { ruleId: targetRule.id, durationMinutes },
+        type: 'START_QUICK_FOCUS',
+        payload: { ruleIds, durationMinutes },
       });
       fetchState();
     } else {
-      const updated = rules.map((r) =>
-        r.id === targetRule.id
-          ? {
-              ...r,
-              enabled: true,
-              scheduleType: 'timer' as const,
-              timerSchedule: {
-                durationMinutes,
-                expiresAt: Date.now() + durationMinutes * 60 * 1000,
-              },
-              updatedAt: Date.now(),
-            }
-          : r
-      );
-      saveDevRules(updated);
-      setRules(updated);
-      setLockState(computeLockState(updated, false, new Date()));
+      const session: QuickFocusSession = {
+        expiresAt: Date.now() + durationMinutes * 60 * 1000,
+        durationMinutes,
+        startedAt: Date.now(),
+        ruleIds,
+      };
+      saveDevQuickFocusSession(session);
+      setLockState(computeLockState(rules, false, new Date(), session));
     }
   };
 
@@ -79,8 +79,10 @@ export const usePopup = () => {
     rules,
     lockState,
     countdown,
-    startQuickTimer,
+    isQuickModalOpen,
+    setIsQuickModalOpen,
+    startQuickFocusSession,
     openDashboard: openOptionsPage,
     fetchState,
   };
-}
+};

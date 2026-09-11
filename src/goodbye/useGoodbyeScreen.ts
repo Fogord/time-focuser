@@ -134,33 +134,30 @@ export const useGoodbyeScreen = (): UseGoodbyeScreenResult => {
     [message]
   );
 
-  const submitFeedback = useCallback(
-    async (reason: string) => {
-      setSelectedFeedback(reason);
-      setMessage(reason);
-      setFeedbackStatus('submitting');
+  const submitFeedback = useCallback(async (reason: string) => {
+    setSelectedFeedback(reason);
+    setMessage(reason);
+    setFeedbackStatus('submitting');
 
-      const params = new URLSearchParams();
-      params.append(MESSAGE_ENTRY, reason);
-      params.append('submit', 'Submit');
+    const params = new URLSearchParams();
+    params.append(MESSAGE_ENTRY, reason);
+    params.append('submit', 'Submit');
 
-      try {
-        const endpoint = CONTACT_FORM_URL.includes('?')
-          ? `${CONTACT_FORM_URL.split('#')[0]}&${params.toString()}`
-          : `${CONTACT_FORM_URL}?${params.toString()}`;
+    try {
+      const endpoint = CONTACT_FORM_URL.includes('?')
+        ? `${CONTACT_FORM_URL.split('#')[0]}&${params.toString()}`
+        : `${CONTACT_FORM_URL}?${params.toString()}`;
 
-        await fetch(endpoint, {
-          method: 'GET',
-          mode: 'no-cors',
-        });
-        setFeedbackStatus('success');
-      } catch (error) {
-        console.error('Failed to submit feedback to Google Docs:', error);
-        setFeedbackStatus('error');
-      }
-    },
-    []
-  );
+      await fetch(endpoint, {
+        method: 'GET',
+        mode: 'no-cors',
+      });
+      setFeedbackStatus('success');
+    } catch (error) {
+      console.error('Failed to submit feedback to Google Docs:', error);
+      setFeedbackStatus('error');
+    }
+  }, []);
 
   const handleReinstall = useCallback(() => {
     window.open('https://chromewebstore.google.com/', '_blank');

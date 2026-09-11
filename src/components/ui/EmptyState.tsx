@@ -22,9 +22,7 @@ export const EmptyState: React.FC<EmptyStateProps> = ({
     >
       <div className="flex justify-center mb-3 text-slate-600">{icon}</div>
       <h3 className="text-sm font-medium text-slate-300">{title}</h3>
-      <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">
-        {description}
-      </p>
+      <p className="text-xs text-slate-500 mt-1 max-w-sm mx-auto leading-relaxed">{description}</p>
       {action && <div className="mt-4 flex justify-center">{action}</div>}
     </div>
   );

@@ -26,12 +26,20 @@ export interface Rule {
   updatedAt: number;
 }
 
+export interface QuickFocusSession {
+  expiresAt: number; // UTC timestamp in milliseconds
+  durationMinutes: number;
+  startedAt: number;
+  ruleIds: string[]; // specific rule IDs or ['*'] for all rules
+}
+
 export interface LockState {
   isLocked: boolean;
   activeRuleIds: string[];
   lockExpiresAt: number | null; // Earliest timestamp when block ends, or null if perpetual
   tamperDetected: boolean;
   lastChecked: number;
+  quickFocusSession?: QuickFocusSession | null;
 }
 
 export interface EncryptedStore {
@@ -60,6 +68,7 @@ export type ExtensionMessage =
   | { type: 'DELETE_RULE'; payload: { ruleId: string } }
   | { type: 'TOGGLE_RULE'; payload: { ruleId: string; enabled: boolean } }
   | { type: 'START_TIMER'; payload: { ruleId: string; durationMinutes: number } }
+  | { type: 'START_QUICK_FOCUS'; payload: { ruleIds: string[]; durationMinutes: number } }
   | { type: 'CHECK_URL'; payload: { url: string } };
 
 export interface ExtensionResponse<T = any> {
@@ -67,4 +76,3 @@ export interface ExtensionResponse<T = any> {
   data?: T;
   error?: string;
 }
-

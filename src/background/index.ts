@@ -1,4 +1,11 @@
-import { Rule, EncryptedStore, ExtensionMessage, ExtensionResponse, FocusStats } from '../types';
+import {
+  Rule,
+  EncryptedStore,
+  ExtensionMessage,
+  ExtensionResponse,
+  FocusStats,
+  QuickFocusSession,
+} from '../types';
 import { encryptAndSignRules, verifyAndDecryptRules } from './security';
 import { computeLockState, isRuleActive } from './scheduler';
 import { findMatchingActiveRule, syncDnrRules } from './firewall';
@@ -9,6 +16,7 @@ import {
   DEFAULT_STATS,
   PROD_UNINSTALL_BASE_URL,
   LOCAL_UNINSTALL_BASE_URL,
+  STORAGE_KEY_QUICK_FOCUS,
 } from '../constants';
 
 const getUninstallBaseUrl = (): string => {
@@ -24,7 +32,10 @@ const getUninstallBaseUrl = (): string => {
 };
 
 const buildUninstallURL = (stats: FocusStats, baseUrl = getUninstallBaseUrl()): string => {
-  const days = Math.max(1, Math.ceil((Date.now() - stats.firstInstalledAt) / (1000 * 60 * 60 * 24)));
+  const days = Math.max(
+    1,
+    Math.ceil((Date.now() - stats.firstInstalledAt) / (1000 * 60 * 60 * 24))
+  );
   const params = new URLSearchParams({
     m: Math.max(0, stats.totalFocusMinutes).toString(),
     s: Math.max(0, stats.sessionsCompleted).toString(),
@@ -35,7 +46,11 @@ const buildUninstallURL = (stats: FocusStats, baseUrl = getUninstallBaseUrl()): 
 };
 
 const syncUninstallURL = async (stats: FocusStats): Promise<void> => {
-  if (typeof chrome === 'undefined' || !chrome.runtime || typeof chrome.runtime.setUninstallURL !== 'function') {
+  if (
+    typeof chrome === 'undefined' ||
+    !chrome.runtime ||
+    typeof chrome.runtime.setUninstallURL !== 'function'
+  ) {
     return;
   }
   try {
@@ -97,7 +112,6 @@ const recordSessionCompleted = async (): Promise<void> => {
   }
 };
 
-
 /**
  * Load and decrypt rules from storage
  * Guaranteed to preserve saved user settings across extension updates
@@ -105,7 +119,7 @@ const recordSessionCompleted = async (): Promise<void> => {
 const loadStoredRules = async (): Promise<{ rules: Rule[]; tamperDetected: boolean }> => {
   try {
     const data = await chrome.storage.local.get(['secureStore', 'rulesBackup']);
-    
+
     // 1. If completely empty (first install ever), initialize defaults
     if (!data.secureStore && !data.rulesBackup) {
       const encrypted = await encryptAndSignRules(DEFAULT_RULES);
@@ -138,7 +152,11 @@ const loadStoredRules = async (): Promise<{ rules: Rule[]; tamperDetected: boole
     console.error('[ServiceWorker] Failed to load rules:', err);
     try {
       const fallback = await chrome.storage.local.get('rulesBackup');
-      if (fallback.rulesBackup && Array.isArray(fallback.rulesBackup) && fallback.rulesBackup.length > 0) {
+      if (
+        fallback.rulesBackup &&
+        Array.isArray(fallback.rulesBackup) &&
+        fallback.rulesBackup.length > 0
+      ) {
         return { rules: fallback.rulesBackup, tamperDetected: false };
       }
     } catch {
@@ -154,6 +172,41 @@ const loadStoredRules = async (): Promise<{ rules: Rule[]; tamperDetected: boole
 const saveStoredRules = async (rules: Rule[]): Promise<void> => {
   const encrypted = await encryptAndSignRules(rules);
   await chrome.storage.local.set({ secureStore: encrypted, rulesBackup: rules });
+};
+
+/**
+ * Load temporary Quick Focus session from storage
+ */
+const loadStoredQuickFocus = async (): Promise<QuickFocusSession | null> => {
+  try {
+    const data = await chrome.storage.local.get(STORAGE_KEY_QUICK_FOCUS);
+    const session: QuickFocusSession | undefined = data[STORAGE_KEY_QUICK_FOCUS];
+    if (session && session.expiresAt && session.expiresAt > Date.now()) {
+      return session;
+    }
+    if (session) {
+      await chrome.storage.local.remove(STORAGE_KEY_QUICK_FOCUS);
+    }
+    return null;
+  } catch (err) {
+    console.error('[ServiceWorker] Failed to load quick focus session:', err);
+    return null;
+  }
+};
+
+/**
+ * Save or clear temporary Quick Focus session
+ */
+const saveStoredQuickFocus = async (session: QuickFocusSession | null): Promise<void> => {
+  try {
+    if (session && session.expiresAt > Date.now()) {
+      await chrome.storage.local.set({ [STORAGE_KEY_QUICK_FOCUS]: session });
+    } else {
+      await chrome.storage.local.remove(STORAGE_KEY_QUICK_FOCUS);
+    }
+  } catch (err) {
+    console.error('[ServiceWorker] Failed to save quick focus session:', err);
+  }
 };
 
 /**
@@ -179,9 +232,10 @@ const updateExtensionBadge = async (isLocked: boolean, tamperDetected: boolean):
  */
 const refreshFirewallState = async (): Promise<void> => {
   const { rules, tamperDetected } = await loadStoredRules();
-  const lockState = computeLockState(rules, tamperDetected);
+  const quickSession = await loadStoredQuickFocus();
+  const lockState = computeLockState(rules, tamperDetected, new Date(), quickSession);
 
-  const activeRules = rules.filter((r) => isRuleActive(r));
+  const activeRules = rules.filter((r) => isRuleActive(r, new Date(), quickSession));
   await syncDnrRules(activeRules);
   await updateExtensionBadge(lockState.isLocked, tamperDetected);
 };
@@ -212,7 +266,9 @@ chrome.runtime.onInstalled.addListener(async (details) => {
 chrome.alarms.onAlarm.addListener(async (alarm) => {
   if (alarm.name === ALARM_NAME) {
     const { rules, tamperDetected } = await loadStoredRules();
-    const hasActiveRule = tamperDetected || rules.some((r) => isRuleActive(r));
+    const quickSession = await loadStoredQuickFocus();
+    const hasActiveRule =
+      tamperDetected || rules.some((r) => isRuleActive(r, new Date(), quickSession));
     if (hasActiveRule) {
       await recordFocusMinute();
     }
@@ -229,7 +285,10 @@ chrome.webNavigation.onBeforeNavigate.addListener(async (details) => {
   if (details.frameId !== 0) return;
 
   const { rules, tamperDetected } = await loadStoredRules();
-  const activeRules = tamperDetected ? rules : rules.filter((r) => isRuleActive(r));
+  const quickSession = await loadStoredQuickFocus();
+  const activeRules = tamperDetected
+    ? rules
+    : rules.filter((r) => isRuleActive(r, new Date(), quickSession));
 
   const matched = findMatchingActiveRule(details.url, activeRules);
   if (matched) {
@@ -251,7 +310,10 @@ chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
   if (changeInfo.status !== 'loading' || !tab.url) return;
 
   const { rules, tamperDetected } = await loadStoredRules();
-  const activeRules = tamperDetected ? rules : rules.filter((r) => isRuleActive(r));
+  const quickSession = await loadStoredQuickFocus();
+  const activeRules = tamperDetected
+    ? rules
+    : rules.filter((r) => isRuleActive(r, new Date(), quickSession));
 
   const matched = findMatchingActiveRule(tab.url, activeRules);
   if (matched) {
@@ -279,7 +341,8 @@ chrome.runtime.onMessage.addListener(
     (async () => {
       try {
         const { rules, tamperDetected } = await loadStoredRules();
-        const lockState = computeLockState(rules, tamperDetected);
+        const quickSession = await loadStoredQuickFocus();
+        const lockState = computeLockState(rules, tamperDetected, new Date(), quickSession);
 
         switch (message.type) {
           case 'GET_STATE': {
@@ -291,6 +354,7 @@ chrome.runtime.onMessage.addListener(
                 lockState,
                 tamperDetected,
                 stats,
+                quickFocusSession: quickSession,
               },
             });
             return;
@@ -321,13 +385,37 @@ chrome.runtime.onMessage.addListener(
           }
 
           case 'CHECK_URL': {
-            const activeRules = rules.filter((r) => isRuleActive(r));
+            const activeRules = rules.filter((r) => isRuleActive(r, new Date(), quickSession));
             const matchedRule = findMatchingActiveRule(message.payload.url, activeRules);
             sendResponse({
               success: true,
               data: {
                 isBlocked: !!matchedRule,
                 matchedRule,
+              },
+            });
+            return;
+          }
+
+          case 'START_QUICK_FOCUS': {
+            await recordSessionCompleted();
+            const { ruleIds, durationMinutes } = message.payload;
+            const now = Date.now();
+            const session: QuickFocusSession = {
+              expiresAt: now + durationMinutes * 60 * 1000,
+              durationMinutes,
+              startedAt: now,
+              ruleIds,
+            };
+            await saveStoredQuickFocus(session);
+            await refreshFirewallState();
+            const updatedLockState = computeLockState(rules, tamperDetected, new Date(), session);
+            sendResponse({
+              success: true,
+              data: {
+                rules,
+                lockState: updatedLockState,
+                quickFocusSession: session,
               },
             });
             return;
@@ -380,7 +468,7 @@ chrome.runtime.onMessage.addListener(
 
           case 'TOGGLE_RULE': {
             const targetRule = rules.find((r) => r.id === message.payload.ruleId);
-            if (targetRule && isRuleActive(targetRule)) {
+            if (targetRule && isRuleActive(targetRule, new Date(), quickSession)) {
               console.warn(
                 `[Security] Rejection: Rule "${targetRule.name}" is currently blocking and cannot be modified!`
               );
@@ -404,7 +492,7 @@ chrome.runtime.onMessage.addListener(
 
           case 'DELETE_RULE': {
             const targetRule = rules.find((r) => r.id === message.payload.ruleId);
-            if (targetRule && isRuleActive(targetRule)) {
+            if (targetRule && isRuleActive(targetRule, new Date(), quickSession)) {
               console.warn(
                 `[Security] Rejection: Rule "${targetRule.name}" is currently blocking and cannot be deleted!`
               );
@@ -424,7 +512,7 @@ chrome.runtime.onMessage.addListener(
 
           case 'UPDATE_RULE': {
             const targetRule = rules.find((r) => r.id === message.payload.rule.id);
-            if (targetRule && isRuleActive(targetRule)) {
+            if (targetRule && isRuleActive(targetRule, new Date(), quickSession)) {
               sendResponse({
                 success: false,
                 error: `RULE_LOCKED: Rule "${targetRule.name}" is currently actively blocking and cannot be modified!`,
@@ -433,7 +521,9 @@ chrome.runtime.onMessage.addListener(
             }
 
             const newRules = rules.map((r) =>
-              r.id === message.payload.rule.id ? { ...message.payload.rule, updatedAt: Date.now() } : r
+              r.id === message.payload.rule.id
+                ? { ...message.payload.rule, updatedAt: Date.now() }
+                : r
             );
             await saveStoredRules(newRules);
             await refreshFirewallState();
@@ -444,7 +534,7 @@ chrome.runtime.onMessage.addListener(
           case 'SAVE_RULES': {
             // Ensure no actively blocking rule was deleted or disabled
             for (const r of rules) {
-              if (isRuleActive(r)) {
+              if (isRuleActive(r, new Date(), quickSession)) {
                 const updated = message.payload.rules.find((nr) => nr.id === r.id);
                 if (!updated || !updated.enabled) {
                   sendResponse({

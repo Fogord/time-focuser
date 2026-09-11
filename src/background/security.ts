@@ -121,11 +121,7 @@ export const encryptAndSignRules = async (rules: Rule[]): Promise<EncryptedStore
 
   // Sign digest: version + iv + ciphertext + timestamp
   const signatureData = `${CURRENT_VERSION}:${ivBase64}:${ciphertextBase64}:${timestamp}`;
-  const hmacBuffer = await crypto.subtle.sign(
-    'HMAC',
-    hmacKey,
-    stringToBuffer(signatureData)
-  );
+  const hmacBuffer = await crypto.subtle.sign('HMAC', hmacKey, stringToBuffer(signatureData));
   const hmacBase64 = arrayBufferToBase64(hmacBuffer);
 
   return {

@@ -1,18 +1,13 @@
 import React from 'react';
-import {
-  Plus,
-  Search,
-  KeyRound,
-  FileKey2,
-  Clock,
-  RefreshCw,
-  Award,
-} from 'lucide-react';
+import { Plus, Search, KeyRound, FileKey2, Clock, RefreshCw, Award, Zap } from 'lucide-react';
 import { useDashboard } from './useDashboard';
-import { isRuleActive } from '../background/scheduler';
+import { isRuleActive, isRuleQuickFocused } from '../background/scheduler';
+import { useCountdown } from '../hooks/useCountdown';
 import { LockBanner } from '../components/LockBanner';
 import { RuleCard } from '../components/RuleCard';
 import { AddRuleModal } from '../components/AddRuleModal';
+import { EditRuleModal } from '../components/EditRuleModal';
+import { QuickActionModal } from '../components/QuickActionModal';
 import { TestUrlModal } from '../components/TestUrlModal';
 import { WatchIcon } from '../components/WatchIcon';
 import { Button, Input, EmptyState } from '../components/ui';
@@ -31,13 +26,24 @@ export const Dashboard: React.FC = () => {
     setErrorMessage,
     isAddModalOpen,
     setIsAddModalOpen,
+    isEditModalOpen,
+    setIsEditModalOpen,
+    editingRule,
+    setEditingRule,
+    isQuickModalOpen,
+    setIsQuickModalOpen,
     isTestModalOpen,
     setIsTestModalOpen,
     handleAddRule,
+    handleEditClick,
+    handleUpdateRule,
     handleToggleRule,
     handleDeleteRule,
+    handleStartQuickFocusSession,
     handleReloadExtension,
   } = useDashboard();
+
+  const { countdown } = useCountdown(lockState.quickFocusSession?.expiresAt ?? null);
 
   const handleOpenGoodbyePreview = () => {
     if (isExtensionEnv && typeof chrome !== 'undefined' && chrome.runtime?.getURL) {
@@ -77,7 +83,13 @@ export const Dashboard: React.FC = () => {
           <div className="flex items-center space-x-3 text-xs text-slate-400">
             <div className="hidden sm:flex items-center gap-1.5 font-mono bg-slate-900 border border-slate-800 px-2.5 py-1.5 rounded-lg">
               <Clock className="w-3.5 h-3.5 text-slate-400" />
-              <span>{currentTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' })}</span>
+              <span>
+                {currentTime.toLocaleTimeString([], {
+                  hour: '2-digit',
+                  minute: '2-digit',
+                  second: '2-digit',
+                })}
+              </span>
             </div>
 
             <Button
@@ -140,6 +152,43 @@ export const Dashboard: React.FC = () => {
           </div>
         )}
 
+        {/* Quick Focus Session Active Banner (Visible on settings page) */}
+        {lockState.quickFocusSession && (
+          <div className="p-4 bg-gradient-to-r from-amber-950/60 via-slate-900 to-amber-950/40 border border-amber-500/50 rounded-2xl shadow-xl flex items-center justify-between flex-wrap gap-3 animate-in fade-in">
+            <div className="flex items-center gap-3">
+              <div className="p-2.5 bg-amber-500/20 border border-amber-500/40 rounded-xl text-amber-400">
+                <Zap className="w-5 h-5 animate-pulse" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <span className="font-bold text-sm text-amber-200">
+                    Quick Focus Session Active (1 Hour)
+                  </span>
+                  <span className="text-[10px] font-semibold uppercase tracking-wider bg-amber-500/20 text-amber-300 border border-amber-500/30 px-2 py-0.5 rounded-full">
+                    Enforcing
+                  </span>
+                </div>
+                <p className="text-xs text-amber-300/80 mt-0.5">
+                  Blocking{' '}
+                  {lockState.quickFocusSession.ruleIds.includes('*')
+                    ? `all ${rules.length} configured rules`
+                    : `${lockState.quickFocusSession.ruleIds.length} selected rules`}
+                  . Your underlying manual schedules and settings remain preserved and will resume
+                  automatically.
+                </p>
+              </div>
+            </div>
+
+            {countdown && (
+              <div className="flex items-center gap-2 bg-slate-950/80 border border-amber-500/40 px-3 py-1.5 rounded-xl">
+                <Clock className="w-4 h-4 text-amber-400" />
+                <span className="text-xs text-slate-400 font-medium">Remaining:</span>
+                <span className="font-mono text-sm font-bold text-amber-200">{countdown}</span>
+              </div>
+            )}
+          </div>
+        )}
+
         {/* Security Tamper Alert (Only renders if storage corruption/tamper is detected) */}
         <LockBanner lockState={lockState} />
 
@@ -156,7 +205,17 @@ export const Dashboard: React.FC = () => {
           </div>
 
           {/* Action Buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <Button
+              variant="secondary"
+              size="md"
+              onClick={() => setIsQuickModalOpen(true)}
+              icon={<Zap className="w-3.5 h-3.5 text-amber-400" />}
+              className="hover:border-amber-500/50 text-amber-200"
+            >
+              Quick Focus (1H)
+            </Button>
+
             <Button
               variant="secondary"
               size="md"
@@ -182,9 +241,7 @@ export const Dashboard: React.FC = () => {
           <h2 className="text-sm font-semibold text-slate-200">
             Configured Rules ({filteredRules.length})
           </h2>
-          <span className="text-xs text-slate-400">
-            {activeBlockingCount} Currently Blocking
-          </span>
+          <span className="text-xs text-slate-400">{activeBlockingCount} Currently Blocking</span>
         </div>
 
         {/* Rules Grid / List */}
@@ -199,15 +256,28 @@ export const Dashboard: React.FC = () => {
           />
         ) : (
           <div className="space-y-3">
-            {filteredRules.map((rule) => (
-              <RuleCard
-                key={rule.id}
-                rule={rule}
-                isActiveNow={rule.enabled && isRuleActive(rule, currentTime)}
-                onToggle={handleToggleRule}
-                onDelete={handleDeleteRule}
-              />
-            ))}
+            {filteredRules.map((rule) => {
+              const isQuickFocused = isRuleQuickFocused(
+                rule.id,
+                lockState.quickFocusSession,
+                currentTime
+              );
+              const isActiveNow =
+                (rule.enabled || isQuickFocused) &&
+                isRuleActive(rule, currentTime, lockState.quickFocusSession);
+
+              return (
+                <RuleCard
+                  key={rule.id}
+                  rule={rule}
+                  isActiveNow={isActiveNow}
+                  isQuickFocused={isQuickFocused}
+                  onToggle={handleToggleRule}
+                  onDelete={handleDeleteRule}
+                  onEdit={handleEditClick}
+                />
+              );
+            })}
           </div>
         )}
 
@@ -220,25 +290,33 @@ export const Dashboard: React.FC = () => {
             </div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-1">
               <div className="space-y-1">
-                <span className="font-medium text-slate-300 block">Non-Extractable Crypto Keys</span>
+                <span className="font-medium text-slate-300 block">
+                  Non-Extractable Crypto Keys
+                </span>
                 <p className="text-[11px] text-slate-500">
                   Encryption keys are generated inside isolated browser IndexedDB with{' '}
-                  <code className="bg-slate-950 px-1 py-0.5 rounded text-slate-400">extractable: false</code>,
-                  making them inaccessible to external desktop programs.
+                  <code className="bg-slate-950 px-1 py-0.5 rounded text-slate-400">
+                    extractable: false
+                  </code>
+                  , making them inaccessible to external desktop programs.
                 </p>
               </div>
               <div className="space-y-1">
                 <span className="font-medium text-slate-300 block">AES-GCM + HMAC-SHA256</span>
                 <p className="text-[11px] text-slate-500">
-                  Stored settings are encrypted with AES-256-GCM and signed with an HMAC digest. Manual file
-                  modifications on disk will invalidate the hash and trigger failsafe lock.
+                  Stored settings are encrypted with AES-256-GCM and signed with an HMAC digest.
+                  Manual file modifications on disk will invalidate the hash and trigger failsafe
+                  lock.
                 </p>
               </div>
               <div className="space-y-1">
-                <span className="font-medium text-slate-300 block">Granular Anti-Circumvention</span>
+                <span className="font-medium text-slate-300 block">
+                  Granular Anti-Circumvention
+                </span>
                 <p className="text-[11px] text-slate-500">
-                  Actively blocking rules cannot be modified, turned off, or removed while their schedule is
-                  enforcing. You can add new rules anytime without interrupting active blocks.
+                  Actively blocking rules cannot be modified, turned off, or removed while their
+                  schedule is enforcing. You can add new rules anytime without interrupting active
+                  blocks.
                 </p>
               </div>
             </div>
@@ -251,6 +329,23 @@ export const Dashboard: React.FC = () => {
         isOpen={isAddModalOpen}
         onClose={() => setIsAddModalOpen(false)}
         onAdd={handleAddRule}
+      />
+
+      <EditRuleModal
+        isOpen={isEditModalOpen}
+        onClose={() => {
+          setIsEditModalOpen(false);
+          setEditingRule(null);
+        }}
+        rule={editingRule}
+        onSave={handleUpdateRule}
+      />
+
+      <QuickActionModal
+        isOpen={isQuickModalOpen}
+        onClose={() => setIsQuickModalOpen(false)}
+        rules={rules}
+        onStart={handleStartQuickFocusSession}
       />
 
       <TestUrlModal

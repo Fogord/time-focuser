@@ -371,20 +371,50 @@
 
     .comparison-list {
       list-style: none;
+      padding: 0;
+      margin: 0;
     }
 
     .comparison-list li {
-      padding: 10px 0;
+      padding: 12px 0;
       display: flex;
       align-items: flex-start;
       gap: 12px;
       font-size: 0.95rem;
+      line-height: 1.5;
       color: #d1d5db;
       border-bottom: 1px solid #1f2937;
     }
 
     .comparison-list li:last-child {
       border-bottom: none;
+    }
+
+    .comparison-icon {
+      flex-shrink: 0;
+      font-size: 1rem;
+      line-height: 1.5;
+    }
+
+    .comparison-content {
+      flex: 1;
+      min-width: 0;
+      line-height: 1.5;
+    }
+
+    .comparison-content strong {
+      color: #f3f4f6;
+      font-weight: 600;
+    }
+
+    .comparison-content code {
+      background: rgba(30, 41, 59, 0.8);
+      color: #38bdf8;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 0.85em;
+      border: 1px solid rgba(56, 189, 248, 0.25);
     }
 
     /* Features Grid */
@@ -639,22 +669,52 @@
         <div class="comparison-card">
           <h3 style="color: #f87171;">❌ Typical Site Blockers</h3>
           <ul class="comparison-list">
-            <li>Easy to disable or remove rules mid-session in 2 clicks</li>
-            <li>Rely purely on client-side JS redirects after pages start loading</li>
-            <li>Often harvest your browsing history or require cloud logins</li>
-            <li>Rules can be bypassed simply by disabling the extension</li>
-            <li>Clunky, dated UI with bloated dependencies</li>
+            <li>
+              <span class="comparison-icon" style="color: #f87171;">✕</span>
+              <div class="comparison-content">Easy to disable or remove rules mid-session in 2 clicks</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #f87171;">✕</span>
+              <div class="comparison-content">Rely purely on client-side JS redirects after pages start loading</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #f87171;">✕</span>
+              <div class="comparison-content">Often harvest your browsing history or require cloud logins</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #f87171;">✕</span>
+              <div class="comparison-content">Rules can be bypassed simply by disabling the extension</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #f87171;">✕</span>
+              <div class="comparison-content">Clunky, dated UI with bloated dependencies</div>
+            </li>
           </ul>
         </div>
 
         <div class="comparison-card highlight">
           <h3 style="color: #60a5fa;">🛡️ TimeFocuser Firewall</h3>
           <ul class="comparison-list">
-            <li><strong>Strict Anti-Circumvention:</strong> Settings are unconditionally locked during active windows</li>
-            <li><strong>Network-Level Firewall:</strong> Powered by <code>declarativeNetRequest</code> before packets load</li>
-            <li><strong>100% Serverless & Private:</strong> Zero telemetry, zero analytics, zero external servers</li>
-            <li><strong>Cryptographic Integrity:</strong> AES-256-GCM + HMAC-SHA256 Web Crypto storage</li>
-            <li><strong>Modern Fast UI:</strong> React 18, Tailwind CSS, lightweight and instant</li>
+            <li>
+              <span class="comparison-icon" style="color: #34d399;">✓</span>
+              <div class="comparison-content"><strong>Strict Anti-Circumvention:</strong> Settings are unconditionally locked during active windows</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #34d399;">✓</span>
+              <div class="comparison-content"><strong>Network-Level Firewall:</strong> Powered by <code>declarativeNetRequest</code> before packets load</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #34d399;">✓</span>
+              <div class="comparison-content"><strong>100% Serverless & Private:</strong> Zero telemetry, zero analytics, zero external servers</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #34d399;">✓</span>
+              <div class="comparison-content"><strong>Cryptographic Integrity:</strong> AES-256-GCM + HMAC-SHA256 Web Crypto storage</div>
+            </li>
+            <li>
+              <span class="comparison-icon" style="color: #34d399;">✓</span>
+              <div class="comparison-content"><strong>Modern Fast UI:</strong> React 18, Tailwind CSS, lightweight and instant</div>
+            </li>
           </ul>
         </div>
       </div>

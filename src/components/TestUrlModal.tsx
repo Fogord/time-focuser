@@ -85,8 +85,13 @@ export const TestUrlModal: React.FC<TestUrlModalProps> = ({ isOpen, onClose, rul
                 <div>
                   <h4 className="font-semibold text-red-100">Access Would Be Blocked Right Now</h4>
                   <p className="text-xs text-red-300/90 mt-1">
-                    Matched active rule: <strong className="text-red-100">{result.matchingRule?.name}</strong> (
-                    {result.matchingRule?.matchType} pattern: <code className="font-mono bg-red-950 px-1 py-0.5 rounded">{result.matchingRule?.urlPattern}</code>).
+                    Matched active rule:{' '}
+                    <strong className="text-red-100">{result.matchingRule?.name}</strong> (
+                    {result.matchingRule?.matchType} pattern:{' '}
+                    <code className="font-mono bg-red-950 px-1 py-0.5 rounded">
+                      {result.matchingRule?.urlPattern}
+                    </code>
+                    ).
                   </p>
                 </div>
               </div>
@@ -94,9 +99,13 @@ export const TestUrlModal: React.FC<TestUrlModalProps> = ({ isOpen, onClose, rul
               <div className="bg-amber-950/40 border border-amber-500/40 rounded-xl p-4 text-amber-200 flex items-start gap-3">
                 <ShieldAlert className="w-6 h-6 text-amber-400 shrink-0 mt-0.5" />
                 <div>
-                  <h4 className="font-semibold text-amber-100">Rule Matches, but Schedule Is Inactive</h4>
+                  <h4 className="font-semibold text-amber-100">
+                    Rule Matches, but Schedule Is Inactive
+                  </h4>
                   <p className="text-xs text-amber-300/90 mt-1">
-                    Matched rule: <strong className="text-amber-100">{result.matchingRule?.name}</strong>, but the current time does not fall within its active blocking hours.
+                    Matched rule:{' '}
+                    <strong className="text-amber-100">{result.matchingRule?.name}</strong>, but the
+                    current time does not fall within its active blocking hours.
                   </p>
                 </div>
               </div>

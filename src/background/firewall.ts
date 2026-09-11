@@ -138,4 +138,4 @@ export const syncDnrRules = async (activeRules: Rule[]): Promise<void> => {
   } catch (error) {
     console.warn('[Firewall] Could not sync declarativeNetRequest dynamic rules:', error);
   }
-}
+};

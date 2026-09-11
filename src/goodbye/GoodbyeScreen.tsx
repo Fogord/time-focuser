@@ -1,7 +1,16 @@
 import React from 'react';
 import { WatchIcon } from '../components/WatchIcon';
 import { useGoodbyeScreen } from './useGoodbyeScreen';
-import { Clock, Shield, Award, Calendar, RefreshCw, CheckCircle2, Loader2, Send } from 'lucide-react';
+import {
+  Clock,
+  Shield,
+  Award,
+  Calendar,
+  RefreshCw,
+  CheckCircle2,
+  Loader2,
+  Send,
+} from 'lucide-react';
 import { Button } from '../components/ui/Button';
 
 import { FEEDBACK_OPTIONS as feedbackOptions } from '../constants';
@@ -86,9 +95,7 @@ export const GoodbyeScreen: React.FC = () => {
             <div className="text-2xl sm:text-3xl font-bold text-slate-100 tracking-tight">
               {stats.sessionsCompleted.toLocaleString()}
             </div>
-            <p className="text-xs text-slate-500 mt-2">
-              Dedicated work sprints completed
-            </p>
+            <p className="text-xs text-slate-500 mt-2">Dedicated work sprints completed</p>
           </div>
 
           {/* Card 4: Days Active */}
@@ -116,10 +123,13 @@ export const GoodbyeScreen: React.FC = () => {
           <div>
             <div className="font-semibold text-slate-200 mb-1">Perspective on your time</div>
             <p className="text-slate-400 leading-relaxed">
-              Spending <span className="text-slate-200 font-medium">{formattedFocusTime}</span> focused
-              is roughly equivalent to reading{' '}
-              <span className="text-red-300 font-medium">~{booksEquivalent} books 📚</span> or taking{' '}
-              <span className="text-red-300 font-medium">~{walksEquivalent} long walks in nature 🌲</span>{' '}
+              Spending <span className="text-slate-200 font-medium">{formattedFocusTime}</span>{' '}
+              focused is roughly equivalent to reading{' '}
+              <span className="text-red-300 font-medium">~{booksEquivalent} books 📚</span> or
+              taking{' '}
+              <span className="text-red-300 font-medium">
+                ~{walksEquivalent} long walks in nature 🌲
+              </span>{' '}
               free from algorithmic feeds. Every minute you protected mattered.
             </p>
           </div>
@@ -153,9 +163,7 @@ export const GoodbyeScreen: React.FC = () => {
           {feedbackStatus === 'error' && (
             <div className="p-4 bg-slate-800/60 border border-slate-700/60 rounded-lg flex items-center gap-3 text-slate-300 text-sm">
               <CheckCircle2 className="w-5 h-5 text-amber-400 shrink-0" />
-              <span>
-                Thank you for your feedback ({selectedFeedback})!
-              </span>
+              <span>Thank you for your feedback ({selectedFeedback})!</span>
             </div>
           )}
 
@@ -178,18 +186,17 @@ export const GoodbyeScreen: React.FC = () => {
               </div>
 
               <form onSubmit={handleSubmit} className="space-y-3 pt-2 border-t border-slate-800/60">
-
-                  <div>
-                    <label className="block text-xs font-medium text-slate-400 mb-1">
-                      Message / Feature Request
-                    </label>
-                    <input
-                      type="text"
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                      placeholder="What can we improve or add?"
-                      className="w-full text-xs px-3 py-2 bg-slate-800/60 border border-slate-700/80 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition-colors"
-                    />
+                <div>
+                  <label className="block text-xs font-medium text-slate-400 mb-1">
+                    Message / Feature Request
+                  </label>
+                  <input
+                    type="text"
+                    value={message}
+                    onChange={(e) => setMessage(e.target.value)}
+                    placeholder="What can we improve or add?"
+                    className="w-full text-xs px-3 py-2 bg-slate-800/60 border border-slate-700/80 rounded-lg text-slate-200 placeholder-slate-500 focus:outline-none focus:border-red-500/60 focus:ring-1 focus:ring-red-500/40 transition-colors"
+                  />
                 </div>
 
                 <div className="flex justify-end">

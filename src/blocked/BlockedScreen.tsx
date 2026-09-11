@@ -5,13 +5,7 @@ import { WatchIcon } from '../components/WatchIcon';
 import { Button } from '../components/ui/Button';
 
 export const BlockedScreen: React.FC = () => {
-  const {
-    blockedUrl,
-    ruleName,
-    countdown,
-    closeTab,
-    openDashboard,
-  } = useBlockedScreen();
+  const { blockedUrl, ruleName, countdown, closeTab, openDashboard } = useBlockedScreen();
 
   return (
     <div className="w-full max-w-xl mx-auto p-6 bg-slate-900/90 border border-slate-800 rounded-3xl shadow-2xl shadow-red-950/40 text-center space-y-6 relative overflow-hidden backdrop-blur-xl">
@@ -73,7 +67,8 @@ export const BlockedScreen: React.FC = () => {
           <span>Active Rule Locked</span>
         </div>
         <p className="text-[11px] text-red-300/80">
-          This rule cannot be disabled, edited, or bypassed while actively blocking. You can still add new rules from the dashboard anytime.
+          This rule cannot be disabled, edited, or bypassed while actively blocking. You can still
+          add new rules from the dashboard anytime.
         </p>
       </div>
 

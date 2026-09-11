@@ -16,7 +16,9 @@ export const LockBanner: React.FC<LockBannerProps> = ({ lockState }) => {
             Storage Tampering Detected — Failsafe Lockdown Active
           </h4>
           <p className="text-sm text-red-300/90 mt-1">
-            The cryptographic HMAC verification failed on local storage. An unauthorized file modification on your PC was detected. All blocks remain strictly enforced to preserve focus integrity.
+            The cryptographic HMAC verification failed on local storage. An unauthorized file
+            modification on your PC was detected. All blocks remain strictly enforced to preserve
+            focus integrity.
           </p>
         </div>
       </div>

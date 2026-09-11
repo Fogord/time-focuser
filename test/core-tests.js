@@ -444,5 +444,152 @@ test('Extension Update - Preserves user rules and focus settings across upgrades
   assert.strictEqual(mockStorage.focusStats.blocksIntercepted, 98);
 });
 
+// -------------------------------------------------------------
+// Test 11: Quick Focus 1-Hour Session - Preserves Rule Settings
+// -------------------------------------------------------------
+
+test('Quick Focus Session - Non-destructive 1-Hour override (All and Some rules)', () => {
+  const isRuleQuickFocused = (ruleId, session, date = new Date()) => {
+    if (!session || !session.expiresAt) return false;
+    if (date.getTime() >= session.expiresAt) return false;
+    return session.ruleIds.includes('*') || session.ruleIds.includes(ruleId);
+  };
+
+  const isRuleActiveWithQuick = (rule, date = new Date(), quickSession = null) => {
+    if (isRuleQuickFocused(rule.id, quickSession, date)) {
+      return true;
+    }
+    return isRuleActive(rule, date);
+  };
+
+  const originalWeeklySchedule = {
+    days: [0], // Sunday only
+    startTime: '09:00',
+    endTime: '17:00',
+  };
+
+  const weeklyRule = {
+    id: 'rule-weekly',
+    name: 'Weekly Rule',
+    urlPattern: 'reddit.com',
+    matchType: 'domain',
+    scheduleType: 'weekly',
+    weeklySchedule: { ...originalWeeklySchedule },
+    enabled: true,
+  };
+
+  const disabledRule = {
+    id: 'rule-disabled',
+    name: 'Disabled Rule',
+    urlPattern: 'twitter.com',
+    matchType: 'domain',
+    scheduleType: 'always',
+    enabled: false,
+  };
+
+  const now = Date.now();
+  const mondayDate = new Date('2026-09-14T10:00:00'); // Monday (not Sunday, so normally inactive)
+
+  // 1. Without quick session, rules are inactive on Monday
+  assert.strictEqual(isRuleActiveWithQuick(weeklyRule, mondayDate, null), false);
+  assert.strictEqual(isRuleActiveWithQuick(disabledRule, mondayDate, null), false);
+
+  // 2. Start Quick Focus for "Some" (only weeklyRule) for 1 hour
+  const someSession = {
+    expiresAt: mondayDate.getTime() + 60 * 60 * 1000,
+    durationMinutes: 60,
+    startedAt: mondayDate.getTime(),
+    ruleIds: ['rule-weekly'],
+  };
+
+  assert.strictEqual(isRuleActiveWithQuick(weeklyRule, mondayDate, someSession), true, 'Weekly rule must be actively blocked under quick session');
+  assert.strictEqual(isRuleActiveWithQuick(disabledRule, mondayDate, someSession), false, 'Disabled rule not in session must remain inactive');
+
+  // Verify weeklyRule manual configuration was NOT overwritten
+  assert.strictEqual(weeklyRule.scheduleType, 'weekly', 'Schedule type must not be overwritten to timer');
+  assert.deepStrictEqual(weeklyRule.weeklySchedule, originalWeeklySchedule, 'Weekly schedule days/times must be preserved');
+
+  // 3. Start Quick Focus for "All"
+  const allSession = {
+    expiresAt: mondayDate.getTime() + 60 * 60 * 1000,
+    durationMinutes: 60,
+    startedAt: mondayDate.getTime(),
+    ruleIds: ['*'],
+  };
+
+  assert.strictEqual(isRuleActiveWithQuick(weeklyRule, mondayDate, allSession), true);
+  assert.strictEqual(isRuleActiveWithQuick(disabledRule, mondayDate, allSession), true);
+
+  // 4. After 1-hour expires, rules must automatically revert to normal schedule
+  const afterOneHour = new Date(mondayDate.getTime() + 61 * 60 * 1000);
+  assert.strictEqual(isRuleActiveWithQuick(weeklyRule, afterOneHour, allSession), false, 'Rule must revert to unblocked after 1 hour');
+  assert.strictEqual(isRuleActiveWithQuick(disabledRule, afterOneHour, allSession), false);
+
+  // On Sunday, weekly schedule is naturally active again
+  const nextSunday = new Date('2026-09-20T10:00:00');
+  assert.strictEqual(isRuleActiveWithQuick(weeklyRule, nextSunday, allSession), true, 'Rule resumes Sunday schedule normally');
+});
+
+// -------------------------------------------------------------
+// Test 12: Rule Editing Permissions (Untriggered vs Triggered)
+// -------------------------------------------------------------
+
+test('Rule Editing - Untriggered rules are editable, actively blocking rules are locked', () => {
+  const activeRule = {
+    id: 'rule-active',
+    name: 'Active Rule',
+    urlPattern: 'youtube.com',
+    matchType: 'domain',
+    scheduleType: 'always',
+    enabled: true,
+  };
+
+  const inactiveRule = {
+    id: 'rule-inactive',
+    name: 'Inactive Rule',
+    urlPattern: 'facebook.com',
+    matchType: 'domain',
+    scheduleType: 'always',
+    enabled: false,
+  };
+
+  let rules = [activeRule, inactiveRule];
+  const testDate = new Date('2026-09-14T10:00:00');
+
+  const handleUpdateRule = (updatedRule) => {
+    const target = rules.find((r) => r.id === updatedRule.id);
+    if (!target) return { success: false, error: 'NOT_FOUND' };
+    if (target.enabled && isRuleActive(target, testDate)) {
+      return { success: false, error: 'RULE_LOCKED' };
+    }
+    rules = rules.map((r) => (r.id === updatedRule.id ? updatedRule : r));
+    return { success: true };
+  };
+
+  // 1. Attempting to edit an actively blocking rule must fail
+  const editActiveResult = handleUpdateRule({
+    ...activeRule,
+    name: 'Tampered Rule Name',
+    urlPattern: 'other.com',
+  });
+  assert.strictEqual(editActiveResult.success, false);
+  assert.strictEqual(editActiveResult.error, 'RULE_LOCKED');
+  assert.strictEqual(rules.find((r) => r.id === 'rule-active').name, 'Active Rule', 'Active rule name must not change');
+
+  // 2. Editing an untriggered / inactive rule must succeed
+  const editInactiveResult = handleUpdateRule({
+    ...inactiveRule,
+    name: 'Updated Social Site',
+    urlPattern: 'instagram.com',
+    matchType: 'wildcard',
+  });
+  assert.strictEqual(editInactiveResult.success, true);
+  const updated = rules.find((r) => r.id === 'rule-inactive');
+  assert.strictEqual(updated.name, 'Updated Social Site');
+  assert.strictEqual(updated.urlPattern, 'instagram.com');
+  assert.strictEqual(updated.matchType, 'wildcard');
+});
+
+
 
 

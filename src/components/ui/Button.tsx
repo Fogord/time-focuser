@@ -37,10 +37,8 @@ export const Button: React.FC<ButtonProps> = ({
       'bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-200 active:scale-[0.98]',
     danger:
       'bg-red-950/40 hover:bg-red-900/50 border border-red-500/40 text-red-300 active:scale-[0.98]',
-    ghost:
-      'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 active:scale-[0.98]',
-    icon:
-      'p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg active:scale-[0.98]',
+    ghost: 'text-slate-400 hover:text-slate-200 hover:bg-slate-800/60 active:scale-[0.98]',
+    icon: 'p-2 bg-slate-900 hover:bg-slate-800 border border-slate-800 text-slate-300 rounded-lg active:scale-[0.98]',
   };
 
   return (
