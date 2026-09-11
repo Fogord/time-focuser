@@ -15,7 +15,9 @@
     "lint": "eslint src/",
     "lint:fix": "eslint src/ --fix",
     "format": "prettier --write \"src/**/*.{ts,tsx,js,jsx,json,css,html}\"",
-    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,html}\""
+    "format:check": "prettier --check \"src/**/*.{ts,tsx,js,jsx,json,css,html}\"",
+    "sync-version": "node scripts/sync-version.js",
+    "version": "node scripts/sync-version.js && git add manifests/"
   },
   "dependencies": {
     "clsx": "^2.1.1",

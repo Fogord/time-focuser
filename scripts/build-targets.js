@@ -70,13 +70,20 @@ for (const target of targetsToBuild) {
     }
   });
 
-  // Copy browser-specific manifest
+  // Copy browser-specific manifest and stamp current version from package.json
+  const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
   const manifestSrc = path.resolve(`manifests/manifest.${target}.json`);
   if (!fs.existsSync(manifestSrc)) {
     console.error(`Manifest not found: ${manifestSrc}`);
     process.exit(1);
   }
-  fs.copyFileSync(manifestSrc, path.join(targetDir, 'manifest.json'));
+  const manifest = JSON.parse(fs.readFileSync(manifestSrc, 'utf8'));
+  manifest.version = pkg.version;
+  fs.writeFileSync(
+    path.join(targetDir, 'manifest.json'),
+    JSON.stringify(manifest, null, 2) + '\n',
+    'utf8'
+  );
 
   // Create zip file for webstore upload
   const zipPath = path.resolve(`dist/${target}.zip`);

@@ -321,14 +321,16 @@ test('Granular Security - Adding rules allowed, actively blocking rules locked',
 // Test 5: Manifest Content Security Policy (CSP) Verification
 // -------------------------------------------------------------
 
-test('Security Hardening - Manifest Content Security Policy (CSP)', () => {
+test('Security Hardening - Manifest Content Security Policy (CSP) & Version Alignment', () => {
   const manifests = ['chrome', 'firefox', 'safari'];
+  const pkg = JSON.parse(fs.readFileSync(path.resolve('package.json'), 'utf8'));
 
   manifests.forEach((target) => {
     const manifestPath = path.resolve(`manifests/manifest.${target}.json`);
     assert.strictEqual(fs.existsSync(manifestPath), true, `Manifest for ${target} must exist`);
 
     const manifestContent = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+    assert.strictEqual(manifestContent.version, pkg.version, `${target} manifest version must match package.json version (${pkg.version})`);
     assert.ok(manifestContent.content_security_policy, `${target} manifest must contain content_security_policy`);
 
     const csp = manifestContent.content_security_policy.extension_pages;
